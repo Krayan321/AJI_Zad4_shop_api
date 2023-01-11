@@ -3,12 +3,14 @@ const Schema = mongoose.Schema;
 
 const ProductOrderSchema = new Schema({
     product: {
-        type: String,
+        type: Schema.Types.ObjectId,
+        ref: 'product',
         required: true
     },
     quantity: {
         type: Number,
-        default: 1
+        default: 1,
+        //required: true
     }
 })
 

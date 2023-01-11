@@ -70,15 +70,16 @@ router.put('/:id', async (req, res) => {
         let order = await Order.findById(req.params.id);
         if (!order) return res.status(404).json({ message: 'No order with this id'});
         let orderState = await OrderState.findById(req.body.orderState)
-        console.log(orderState);
+        let updatedOrderState = await OrderState.findById(order.orderState)
         if (req.body) {
             Object.keys(req.body).forEach((key) => {
                 order[key] = req.body[key]
             })
         }
-        let updatedOrderState = await OrderState.findById(req.body.orderState);
 
-        if (orderState.sequence > updatedOrderState.sequence)
+        //let updatedOrderState = await OrderState.findById(order);
+
+        if (orderState.sequence < updatedOrderState.sequence)
             return res.status(404).json({ message: 'You cant do that'})
         const updatedOrder = await order.save();
         res.status(201).json(updatedOrder);
