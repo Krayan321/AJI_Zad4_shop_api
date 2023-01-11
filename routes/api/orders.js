@@ -9,16 +9,83 @@ const ProductOrder = require('../../models/ProductOrder');
 const getProduct = require('../../middleware/getProduct');
 const getOrderState = require('../../middleware/getOrderState');
 
-router.post('/', getOrderState, getProduct, async (req, res) => {
+function ValidateEmail(input) {
+    var validRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
+    if (input.match(validRegex)) {
+        console.log("Valid email address!");
+    return true;
+    } else {
+    console.log("Invalid email address!");
+    return false;
+    }
+    
+}
+
+function ValidateNumber(input) {
+    var validRegex = /^\d{9}$/;
+    if (input.match(validRegex)) {
+        console.log("Valid phone number!");
+    return true;
+    } else {
+    console.log("Invalid phone number!");
+    return false;
+    }
+}
+
+
+router.post('/', getOrderState, async (req, res) => {
     try {
+        // const arr = req.body.products;
+        // l=arr.length
+        // console.log(arr);
+        // console.log();
+        // for (let i = 0; i<l-1; i++ ) {
+        //     arr[i] = new ProductOrder({
+        //         product: req.body.products.product,
+        //         quantity: req.body.products.quantity,
+        //     })
+        // }
+        // let item = arr[0];
+        // let item1 = Product.findById(item.product);
+        // console.log(item1);
+        // arr.forEach((index ) => {
+        //     arr[index] = new ProductOrder({
+        //         product: req.body.products.product,
+        //         quantity: req.body.products.quantity,
+        //     })
+        // });
+        // console.log(arr);
+        const productOrder = new ProductOrder({
+            product: req.body.products.product,
+            quantity: req.body.products.quantity,
+        })
         const order = new Order({
             orderState: req.body.orderState,
             userName: req.body.userName,
             userEmail: req.body.userEmail,
             userNumber: req.body.userNumber,
-            products: req.body.products
+            products: productOrder
         });
+        
+        if(!ValidateEmail(req.body.userEmail)) {
+            return res.status(404).json({message: "Zły email"});
+        }
+        if(!ValidateNumber(req.body.userNumber)) {
+            return res.status(404).json({message: "Zły numer"});
+        }
         const newOrder = await order.save();
+        // order
+        //     .save()
+        //     .then(result => {
+        //         res.status(201).json({
+        //             orderState: result.orderState,
+        //             userName: result.userName,
+        //             userEmail: result.userEmail,
+        //             userNumber: result.userNumber,
+        //             quantity: result.products.quantity,
+                        
+        //         });
+        //     });
         res.status(201).json(newOrder);
     } catch(err) {
         res.status(400).json(err.message);
@@ -58,6 +125,15 @@ router.post('/', getOrderState, getProduct, async (req, res) => {
 router.get('/', async (req, res) => {
     Order.find()
         .populate('products', 'productName')
+        .populate('orderState', "state")
+        .exec()
+        .then(docs => {
+            res.status(200).json(docs)
+        })
+});
+
+router.get('/:id', async (req, res) => {
+    Order.findById(req.params.id)
         .populate('orderState', "state")
         .exec()
         .then(docs => {

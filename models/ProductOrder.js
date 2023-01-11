@@ -9,9 +9,9 @@ const ProductOrderSchema = new Schema({
     },
     quantity: {
         type: Number,
-        default: 1,
-        //required: true
+        //default: 1,
+        required: true
     }
 })
 
-module.exports = mongoose.model('productOrderSchema', ProductOrderSchema);
+module.exports = mongoose.model('productOrder', ProductOrderSchema);
