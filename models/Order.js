@@ -29,8 +29,6 @@ const OrderSchema = new Schema({
         ref: 'product',
         required: true
     }
-    
-
 })
 
 module.exports = mongoose.model('order', OrderSchema);
