@@ -10,7 +10,7 @@ const OrderSchema = new Schema({
     orderState: {
         type: Schema.Types.ObjectId, 
         ref: 'orderState',
-        //required: true
+        required: true
     },
     userName: {
         type: String,

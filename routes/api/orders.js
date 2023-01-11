@@ -4,6 +4,7 @@ const router = express.Router();
 const Product = require('../../models/Product');
 const Order = require('../../models/Order');
 const OrderState = require('../../models/OrderState');
+const ProductOrder = require('../../models/ProductOrder');
 
 const getProduct = require('../../middleware/getProduct');
 const getOrderState = require('../../middleware/getOrderState');
@@ -11,10 +12,11 @@ const getOrderState = require('../../middleware/getOrderState');
 router.post('/', getOrderState, getProduct, async (req, res) => {
     try {
         const order = new Order({
+            orderState: req.body.orderState,
             userName: req.body.userName,
             userEmail: req.body.userEmail,
             userNumber: req.body.userNumber,
-            products: res.products
+            products: req.body.products
         });
         const newOrder = await order.save();
         res.status(201).json(newOrder);
@@ -55,7 +57,8 @@ router.post('/', getOrderState, getProduct, async (req, res) => {
 
 router.get('/', async (req, res) => {
     Order.find()
-        .populate('products', 'product_name')
+        .populate('products', 'productName')
+        .populate('orderState', "state")
         .exec()
         .then(docs => {
             res.status(200).json(docs)
@@ -66,11 +69,17 @@ router.put('/:id', async (req, res) => {
     try {
         let order = await Order.findById(req.params.id);
         if (!order) return res.status(404).json({ message: 'No order with this id'});
+        let orderState = await OrderState.findById(req.body.orderState)
+        console.log(orderState);
         if (req.body) {
             Object.keys(req.body).forEach((key) => {
                 order[key] = req.body[key]
             })
         }
+        let updatedOrderState = await OrderState.findById(req.body.orderState);
+
+        if (orderState.sequence > updatedOrderState.sequence)
+            return res.status(404).json({ message: 'You cant do that'})
         const updatedOrder = await order.save();
         res.status(201).json(updatedOrder);
     } catch (err) {

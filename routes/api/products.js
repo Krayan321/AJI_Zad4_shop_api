@@ -6,53 +6,53 @@ const Category = require('../../models/Category');
 
 const getCategory = require('../../middleware/getCategory');
 //create
-// router.post('/', getCategory, async (req, res) => {
-//     try {
-//         const product = new Product({
-//             productName: req.body.productName,
-//             desc: req.body.desc,
-//             price: req.body.price,
-//             weight: req.body.weight,
-//             categoryId: res.categoryId
-//         });
-//         if (product.price<=0) return res.status(404).json({message: "Cena musi być więszka niż 0!"});
-//         if (product.weight<=0) return res.status(404).json({message: "Waga musi być więszka niż 0!"});
-//         const newProduct = await product.save();
-//         res.status(201).json(newProduct);
-//     } catch(err) {
-//         res.status(400).json(err.message);
-//     }
-// });
-
-router.post("/", (req, res, next) => {
-    console.log(req.body);
-    Category.findById(req.body.categoryId)
-      .then(category => {
-        if (!category) {
-          return res.status(404).json({
-            message: "Category not found"
-          });
-        }
+router.post('/', getCategory, async (req, res) => {
+    try {
         const product = new Product({
             productName: req.body.productName,
             desc: req.body.desc,
             price: req.body.price,
             weight: req.body.weight,
-            categoryId: req.body.categoryId
+            categoryId: res.categoryId
         });
-        return product.save();
-      })
-      .then(result => {
-        console.log(result);
-        res.status(201).json(result);
-      })
-      .catch(err => {
-        console.log(err);
-        res.status(500).json({
-          error: err
-        });
-      });
-  });
+        if (product.price<=0) return res.status(404).json({message: "Cena musi być więszka niż 0!"});
+        if (product.weight<=0) return res.status(404).json({message: "Waga musi być więszka niż 0!"});
+        const newProduct = await product.save();
+        res.status(201).json(newProduct);
+    } catch(err) {
+        res.status(400).json(err.message);
+    }
+});
+
+// router.post("/", (req, res, next) => {
+//     console.log(req.body);
+//     Category.findById(req.body.categoryId)
+//       .then(category => {
+//         if (!category) {
+//           return res.status(404).json({
+//             message: "Category not found"
+//           });
+//         }
+//         const product = new Product({
+//             productName: req.body.productName,
+//             desc: req.body.desc,
+//             price: req.body.price,
+//             weight: req.body.weight,
+//             categoryId: req.body.categoryId
+//         });
+//         return product.save();
+//       })
+//       .then(result => {
+//         console.log(result);
+//         res.status(201).json(result);
+//       })
+//       .catch(err => {
+//         console.log(err);
+//         res.status(500).json({
+//           error: err
+//         });
+//       });
+//   });
 
 //read all
 // router.get('/', async (req, res) => {
