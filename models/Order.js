@@ -24,10 +24,10 @@ const OrderSchema = new Schema({
         type: String,
         required: true
     },
-    products: {
+    products: [{
         type: Schema.Types.ObjectId,
         ref: 'productOrder'
-    }
+    }]
 })
 
 module.exports = mongoose.model('order', OrderSchema);

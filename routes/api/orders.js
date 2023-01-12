@@ -12,10 +12,10 @@ const getOrderState = require('../../middleware/getOrderState');
 function ValidateEmail(input) {
     var validRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
     if (input.match(validRegex)) {
-        console.log("Valid email address!");
+        
     return true;
     } else {
-    console.log("Invalid email address!");
+    
     return false;
     }
     
@@ -24,10 +24,10 @@ function ValidateEmail(input) {
 function ValidateNumber(input) {
     var validRegex = /^\d{9}$/;
     if (input.match(validRegex)) {
-        console.log("Valid phone number!");
+        
     return true;
     } else {
-    console.log("Invalid phone number!");
+    
     return false;
     }
 }
@@ -35,58 +35,91 @@ function ValidateNumber(input) {
 
 router.post('/', getOrderState, async (req, res) => {
     try {
-        // const arr = req.body.products;
-        // l=arr.length
-        // console.log(arr);
-        // console.log();
-        // for (let i = 0; i<l-1; i++ ) {
-        //     arr[i] = new ProductOrder({
-        //         product: req.body.products.product,
-        //         quantity: req.body.products.quantity,
-        //     })
-        // }
-        // let item = arr[0];
-        // let item1 = Product.findById(item.product);
-        // console.log(item1);
-        // arr.forEach((index ) => {
-        //     arr[index] = new ProductOrder({
-        //         product: req.body.products.product,
-        //         quantity: req.body.products.quantity,
-        //     })
-        // });
-        // console.log(arr);
-        const productOrder = new ProductOrder({
-            product: req.body.products.product,
-            quantity: req.body.products.quantity,
+        let promisesProd = [];
+        req.body.products.forEach((prod)=>{
+            promisesProd.push(Product.findById(prod.product));
         })
+
+        Promise.all(promisesProd).then(results => {
+            
+            if(results.includes(undefined)) return res.status(400).json({message: "No product"});
+            const order = new Order({
+                orderState: req.body.orderState,
+                userName: req.body.userName,
+                userEmail: req.body.userEmail,
+                userNumber: req.body.userNumber,
+                products: []
+            });
+            
+            const productsArr = req.body.products; 
+            let promises = [];
+            productsArr.forEach((prod) => {
+                let tmp = new ProductOrder({
+                    product: prod.product,
+                    quantity: prod.quantity,
+                })
+    
+                
+                try {
+                    promises.push(tmp.save())
+                } catch {
+                    return res.status(400).json({message: "No product"})
+                }            
+            });
+    
+            if(!ValidateEmail(req.body.userEmail)) {
+                return res.status(404).json({message: "Zły email"});
+            }
+            if(!ValidateNumber(req.body.userNumber)) {
+                return res.status(404).json({message: "Zły numer"});
+            }
+    
+            Promise.all(promises).then(prodOrder => {
+                order.products = prodOrder;
+                order.save().then(result => {
+                    res.status(201).json(result);
+                });
+            })
+        })
+        
         const order = new Order({
             orderState: req.body.orderState,
             userName: req.body.userName,
             userEmail: req.body.userEmail,
             userNumber: req.body.userNumber,
-            products: productOrder
+            products: []
         });
         
+        const productsArr = req.body.products; 
+        let promises = [];
+        productsArr.forEach((prod) => {
+            let tmp = new ProductOrder({
+                product: prod.product,
+                quantity: prod.quantity,
+            })
+
+            
+            try {
+                promises.push(tmp.save())
+            } catch {
+                return res.status(400).json({message: "No product"})
+            }            
+        });
+
         if(!ValidateEmail(req.body.userEmail)) {
             return res.status(404).json({message: "Zły email"});
         }
         if(!ValidateNumber(req.body.userNumber)) {
             return res.status(404).json({message: "Zły numer"});
         }
-        const newOrder = await order.save();
-        // order
-        //     .save()
-        //     .then(result => {
-        //         res.status(201).json({
-        //             orderState: result.orderState,
-        //             userName: result.userName,
-        //             userEmail: result.userEmail,
-        //             userNumber: result.userNumber,
-        //             quantity: result.products.quantity,
-                        
-        //         });
-        //     });
-        res.status(201).json(newOrder);
+
+        Promise.all(promises).then(prodOrder => {
+            order.products = prodOrder;
+            order.save().then(result => {
+                res.status(201).json(result);
+            });
+        })
+        
     } catch(err) {
         res.status(400).json(err.message);
     }
