@@ -35,6 +35,51 @@ function ValidateNumber(input) {
 
 router.post('/', getOrderState, async (req, res) => {
     try {
+    const order = new Order({
+        orderState: req.body.orderState,
+        userName: req.body.userName,
+        userEmail: req.body.userEmail,
+        userNumber: req.body.userNumber,
+        products: []
+    });
+    
+    const productsArr = req.body.products; 
+    let promises = [];
+    productsArr.forEach((prod) => {
+        let tmp = new ProductOrder({
+            product: prod.product,
+            quantity: prod.quantity,
+        })
+
+        
+        try {
+            promises.push(tmp.save())
+        } catch {
+            return res.status(400).json({message: "No product"})
+        }            
+    });
+
+    if(!ValidateEmail(req.body.userEmail)) {
+        return res.status(404).json({message: "Zły email"});
+    }
+    if(!ValidateNumber(req.body.userNumber)) {
+        return res.status(404).json({message: "Zły numer"});
+    }
+
+    Promise.all(promises).then(prodOrder => {
+        order.products = prodOrder;
+        order.save().then(result => {
+            res.status(201).json(result);
+        });
+    })
+    
+} catch(err) {
+    res.status(400).json(err.message);
+}
+})
+
+router.post('/aaa', getOrderState, async (req, res) => {
+    try {
         let promisesProd = [];
         req.body.products.forEach((prod)=>{
             promisesProd.push(Product.findById(prod.product));
@@ -180,14 +225,15 @@ router.put('/:id', async (req, res) => {
         if (!order) return res.status(404).json({ message: 'No order with this id'});
         let orderState = await OrderState.findById(req.body.orderState)
         let updatedOrderState = await OrderState.findById(order.orderState)
-        if (req.body) {
-            Object.keys(req.body).forEach((key) => {
-                order[key] = req.body[key]
-            })
+        if (req.body.orderState) {
+            // Object.keys(req.body).forEach((key) => {
+            //     order[key] = req.body[key]
+            // })
+            order.orderState = req.body.orderState;
         }
 
         //let updatedOrderState = await OrderState.findById(order);
-
+        
         if (orderState.sequence < updatedOrderState.sequence)
             return res.status(404).json({ message: 'You cant do that'})
         const updatedOrder = await order.save();
