@@ -14,18 +14,18 @@ router.get('/', async (req, res) => {
     })
 });
 
-// router.post('/', async (req, res) => {
-//     try {
-//         const orderState = new OrderState({
-//             state: req.body.state,
-//             sequence: req.body.sequence
-//         });
+router.post('/', async (req, res) => {
+    try {
+        const orderState = new OrderState({
+            state: req.body.state,
+            sequence: req.body.sequence
+        });
 
-//         const newOrderState = await orderState.save();
-//         res.status(201).json(newOrderState);
-//     } catch(err) {
-//         res.status(400).json(err.message);
-//     }
-// });
+        const newOrderState = await orderState.save();
+        res.status(201).json(newOrderState);
+    } catch(err) {
+        res.status(400).json(err.message);
+    }
+});
 
 module.exports = router;

@@ -116,7 +116,7 @@ router.get('/', async (req, res) => {
         .populate('orderState', "state")
         .exec()
         .then(docs => {
-            res.status(StatusCodes.OK).send(ReasonPhrases.OK)
+            res.status(StatusCodes.OK).send(docs)
         })
 });
 

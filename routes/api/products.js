@@ -75,7 +75,7 @@ router.get("/", (req, res, next) => {
       .populate('categoryId', 'category_name')
       .exec()
       .then(docs => {
-        res.status(StatusCodes.OK).send(ReasonPhrases.OK);
+        res.status(StatusCodes.OK).send(docs);
       });
   });
 
