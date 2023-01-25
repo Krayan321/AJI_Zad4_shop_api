@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const {ReasonPhrases, StatusCodes, getReasonPhrase, getStatusCode } = require('http-status-codes')
 
 const Product = require('../../models/Product');
 const Category = require('../../models/Category');
@@ -15,12 +16,12 @@ router.post('/', getCategory, async (req, res) => {
             weight: req.body.weight,
             categoryId: res.categoryId
         });
-        if (product.price<=0) return res.status(404).json({message: "Cena musi być więszka niż 0!"});
-        if (product.weight<=0) return res.status(404).json({message: "Waga musi być więszka niż 0!"});
+        if (product.price<=0) return res.status(StatusCodes.FORBIDDEN).send(ReasonPhrases.FORBIDDEN + " Price " + req.body.price);
+        if (product.weight<=0) return res.status(StatusCodes.FORBIDDEN).send(ReasonPhrases.FORBIDDEN + " Weight " + req.body.weight);
         const newProduct = await product.save();
-        res.status(201).json(newProduct);
+        res.status(StatusCodes.CREATED).send(ReasonPhrases.CREATED + newProduct);
     } catch(err) {
-        res.status(400).json(err.message);
+        res.status(StatusCodes.BAD_REQUEST).send(ReasonPhrases.BAD_REQUEST);
     }
 });
 
@@ -74,7 +75,7 @@ router.get("/", (req, res, next) => {
       .populate('categoryId', 'category_name')
       .exec()
       .then(docs => {
-        res.status(200).json(docs);
+        res.status(StatusCodes.OK).send(ReasonPhrases.OK);
       });
   });
 
@@ -84,13 +85,13 @@ router.get("/", (req, res, next) => {
 router.get('/:id', async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
-        if (!product) return res.status(404).json({ message: 'No product with this id'});
+        if (!product) return res.status(StatusCodes.NOT_FOUND).send(ReasonPhrases.NOT_FOUND);
         const myProduct = [];
         const category = await Category.findById(product.categoryId);
         myProduct.push({product, category})
         res.json(myProduct);
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(ReasonPhrases.INTERNAL_SERVER_ERROR);
     }
 });
 
@@ -98,7 +99,7 @@ router.get('/:id', async (req, res) => {
 router.put('/:id', getCategory, async (req, res) => {
     try {
         let product = await Product.findById(req.params.id);
-        if (!product) return res.status(404).json({ message: 'No product with this id'});
+        if (!product) return res.status(StatusCodes.NOT_FOUND).json(ReasonPhrases.NOT_FOUND);
         console.log(req.body);
         console.log("req.body");
         if (req.body) {
@@ -107,12 +108,12 @@ router.put('/:id', getCategory, async (req, res) => {
             })
         }
         product.categoryId = res.categoryId;
-        if (product.price<=0) return res.status(404).json({message: "Cena musi być więszka niż 0!"});
-        if (product.weight<=0) return res.status(404).json({message: "Waga musi być więszka niż 0!"});
+        if (product.price<=0) return res.status(StatusCodes.FORBIDDEN).json(ReasonPhrases.FORBIDDEN + " Price " + product.price);
+        if (product.weight<=0) return res.status(StatusCodes.FORBIDDEN).json(ReasonPhrases.FORBIDDEN + " Weight " + product.price);
         const updatedProduct = await product.save();
-        res.status(201).json(updatedProduct);
+        res.status(StatusCodes.CREATED).json(ReasonPhrases.CREATED + updatedProduct);
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(getStatusCode.INTERNAL_SERVER_ERROR).send(ReasonPhrases.INTERNAL_SERVER_ERROR + err.message);
     }
 });
 
@@ -138,11 +139,11 @@ router.put('/:id', getCategory, async (req, res) => {
 router.delete('/:id', async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
-        if (!product) return res.status(404).json({ message: 'No product with this id'});
+        if (!product) return res.status(StatusCodes.NOT_FOUND).json(ReasonPhrases.NOT_FOUND);
         await product.remove();
         res.json({message: 'Product removed'});
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(ReasonPhrases.INTERNAL_SERVER_ERROR);
     }
 });
 

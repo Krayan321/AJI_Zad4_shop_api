@@ -2,11 +2,11 @@ const mongoose = require('mongoose')
 const Schema = mongoose.Schema;
 
 const OrderSchema = new Schema({
-    approvalDate: {
-        type: Date,
-        //required: true,
-        default: null
-    },
+    // approvalDate: {
+    //     type: Date,
+    //     //required: true,
+    //     default: null
+    // },
     orderState: {
         type: Schema.Types.ObjectId, 
         ref: 'orderState',

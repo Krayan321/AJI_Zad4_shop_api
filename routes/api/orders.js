@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const {ReasonPhrases, StatusCodes, getReasonPhrase, getStatusCode } = require('http-status-codes')
 
 const Product = require('../../models/Product');
 const Order = require('../../models/Order');
@@ -55,120 +56,29 @@ router.post('/', getOrderState, async (req, res) => {
         try {
             promises.push(tmp.save())
         } catch {
-            return res.status(400).json({message: "No product"})
+            return res.status(StatusCodes.NOT_FOUND).send(ReasonPhrases.NOT_FOUND);
         }            
     });
 
     if(!ValidateEmail(req.body.userEmail)) {
-        return res.status(404).json({message: "Zły email"});
+        return res.status(StatusCodes.FORBIDDEN).send(ReasonPhrases.FORBIDDEN + " Email " + req.body.userEmail);
     }
     if(!ValidateNumber(req.body.userNumber)) {
-        return res.status(404).json({message: "Zły numer"});
+        return res.status(StatusCodes.FORBIDDEN).send(ReasonPhrases.FORBIDDEN + " Number " + req.body.userNumber);
     }
 
     Promise.all(promises).then(prodOrder => {
         order.products = prodOrder;
         order.save().then(result => {
-            res.status(201).json(result);
+            res.status(StatusCodes.OK).send(ReasonPhrases.OK + result);
         });
     })
     
 } catch(err) {
-    res.status(400).json(err.message);
+    res.status(StatusCodes.BAD_REQUEST).send(ReasonPhrases.BAD_REQUEST);
 }
 })
 
-router.post('/aaa', getOrderState, async (req, res) => {
-    try {
-        let promisesProd = [];
-        req.body.products.forEach((prod)=>{
-            promisesProd.push(Product.findById(prod.product));
-        })
-
-        Promise.all(promisesProd).then(results => {
-            
-            if(results.includes(undefined)) return res.status(400).json({message: "No product"});
-            const order = new Order({
-                orderState: req.body.orderState,
-                userName: req.body.userName,
-                userEmail: req.body.userEmail,
-                userNumber: req.body.userNumber,
-                products: []
-            });
-            
-            const productsArr = req.body.products; 
-            let promises = [];
-            productsArr.forEach((prod) => {
-                let tmp = new ProductOrder({
-                    product: prod.product,
-                    quantity: prod.quantity,
-                })
-    
-                
-                try {
-                    promises.push(tmp.save())
-                } catch {
-                    return res.status(400).json({message: "No product"})
-                }            
-            });
-    
-            if(!ValidateEmail(req.body.userEmail)) {
-                return res.status(404).json({message: "Zły email"});
-            }
-            if(!ValidateNumber(req.body.userNumber)) {
-                return res.status(404).json({message: "Zły numer"});
-            }
-    
-            Promise.all(promises).then(prodOrder => {
-                order.products = prodOrder;
-                order.save().then(result => {
-                    res.status(201).json(result);
-                });
-            })
-        })
-        
-        const order = new Order({
-            orderState: req.body.orderState,
-            userName: req.body.userName,
-            userEmail: req.body.userEmail,
-            userNumber: req.body.userNumber,
-            products: []
-        });
-        
-        const productsArr = req.body.products; 
-        let promises = [];
-        productsArr.forEach((prod) => {
-            let tmp = new ProductOrder({
-                product: prod.product,
-                quantity: prod.quantity,
-            })
-
-            
-            try {
-                promises.push(tmp.save())
-            } catch {
-                return res.status(400).json({message: "No product"})
-            }            
-        });
-
-        if(!ValidateEmail(req.body.userEmail)) {
-            return res.status(404).json({message: "Zły email"});
-        }
-        if(!ValidateNumber(req.body.userNumber)) {
-            return res.status(404).json({message: "Zły numer"});
-        }
-
-        Promise.all(promises).then(prodOrder => {
-            order.products = prodOrder;
-            order.save().then(result => {
-                res.status(201).json(result);
-            });
-        })
-        
-    } catch(err) {
-        res.status(400).json(err.message);
-    }
-});
 
 // router.post('/', async (req, res) => {
 //     Product.findById(req.body.products)
@@ -206,7 +116,7 @@ router.get('/', async (req, res) => {
         .populate('orderState', "state")
         .exec()
         .then(docs => {
-            res.status(200).json(docs)
+            res.status(StatusCodes.OK).send(ReasonPhrases.OK)
         })
 });
 
@@ -215,14 +125,14 @@ router.get('/:id', async (req, res) => {
         .populate('orderState', "state")
         .exec()
         .then(docs => {
-            res.status(200).json(docs)
+            res.status(StatusCodes.OK).send(ReasonPhrases.OK)
         })
 });
 
 router.put('/:id', async (req, res) => {
     try {
         let order = await Order.findById(req.params.id);
-        if (!order) return res.status(404).json({ message: 'No order with this id'});
+        if (!order) return res.status(StatusCodes.NOT_FOUND).send(ReasonPhrases.NOT_FOUND);
         let orderState = await OrderState.findById(req.body.orderState)
         let updatedOrderState = await OrderState.findById(order.orderState)
         if (req.body.orderState) {
@@ -235,11 +145,11 @@ router.put('/:id', async (req, res) => {
         //let updatedOrderState = await OrderState.findById(order);
         
         if (orderState.sequence < updatedOrderState.sequence)
-            return res.status(404).json({ message: 'You cant do that'})
+            return res.status(StatusCodes.FORBIDDEN).send(ReasonPhrases.FORBIDDEN)
         const updatedOrder = await order.save();
-        res.status(201).json(updatedOrder);
+        res.status(StatusCodes.ACCEPTED).send(ReasonPhrases.ACCEPTED);
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(ReasonPhrases.INTERNAL_SERVER_ERROR);
     }
 });
 
